@@ -6,9 +6,10 @@ from dateutil import rrule
 import re
 
 # Uses Guardian API. Find documentation at
-# https://github.com/prabhath6/theguardian-api-python
-# https://gist.github.com/dannguyen/c9cb220093ee4c12b840
 # https://open-platform.theguardian.com/documentation/
+
+# More helpful info at
+# https://gist.github.com/dannguyen/c9cb220093ee4c12b840
 
 GUARDIAN_KEY = "91e63133-0adb-493f-9e76-33db7e78a7d2"
 API_ENDPOINT = 'http://content.guardianapis.com/search'
@@ -46,22 +47,30 @@ while current_page <= total_pages:
     # re-serialize it for pretty indentation
     f.write(json.dumps(all_results, indent=2))
 
-
 # Turns the data into a CSV file
+
 title = []
 date = []
 text = []
-# read the JSON_PATH 
+# Read the JSON_PATH 
 with open(JSON_PATH, 'r') as f:
   articles = json.load(f)
   for doc in articles:
     title.append(doc["webTitle"])
     text.append(doc["fields"]["body"])
     date.append(doc['webPublicationDate'])
-  
+
+
+# Strips links from the text
+def clean(text):
+    output = re.sub('<[^>]+>', '', text)
+    output = output.replace("\n"," ")
+    return output
+
 # writing data into CSV file
-print("Rewriting", JSON_PATH, "as CSV:", CSV_PATH)
-df = {'title': title, 'date': date, 'text': text}
-df = pd.DataFrame(df)
+print("Rewriting", JSON_PATH, "as", CSV_PATH)
+para = {'title': title, 'date': date, 'text': text}
+df = pd.DataFrame(para)
+df['text'] = df['text'].map(clean)
 df = df.to_csv(CSV_PATH)
 
